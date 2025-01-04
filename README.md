@@ -1,11 +1,15 @@
 # Investigation of the Grokking Phenomenon
 
+This repo contains the code for reproducing our results. The required supplementary.zip is also organized and presented here.
+
   
 ## Installation
 
 ```bash
 pip install -e .
 ```
+
+The python file train.py is for training and the grokking phenomenon.
 
 ## Training
 
