@@ -30,7 +30,7 @@ from grok.data import (
     ArithmeticDataset,
     ArithmeticIterator,
 )
-from grok.transformer import Transformer
+from grok.transformer import Transformer, MLPlarge, MLPsmall, LSTM, MLPmedium
 from grok.measure import get_sharpness
 
 DEFAULT_LOG_DIR = "logs"
@@ -50,17 +50,49 @@ class TrainableTransformer(LightningModule):
         # self.hparams = hparams  # type: ignore
         self.save_hyperparameters(hparams)
         self.prepare_data()
+        self.model = hparams.model
+        self.prefix = hparams.prefix
+        os.makedirs(self.prefix, exist_ok=True)
 
-        self.transformer = Transformer(
-            hparams.n_layers,
-            hparams.n_heads,
-            hparams.d_model,
-            hparams.dropout,
-            hparams.max_context_len,
-            len(self.train_dataset.tokenizer),
-            hparams.non_linearity,
-            weight_noise=self.hparams.weight_noise,
-        )
+        if hparams.model == "transformer":
+            self.transformer = Transformer(
+                hparams.n_layers,
+                hparams.n_heads,
+                hparams.d_model,
+                hparams.dropout,
+                hparams.max_context_len,
+                len(self.train_dataset.tokenizer),
+                hparams.non_linearity,
+                weight_noise=self.hparams.weight_noise,
+            )
+        elif hparams.model == "mlplarge":
+            self.transformer = MLPlarge(
+                num_i = 6,
+                num_h = 1000,
+                vocab_len=len(self.train_dataset.tokenizer),
+            )
+        elif hparams.model == "mlpmedium":
+            self.transformer = MLPmedium(
+                num_i = 6,
+                num_h = 300,
+                vocab_len=len(self.train_dataset.tokenizer),
+            )
+        elif hparams.model == "mlpsmall":
+            self.transformer = MLPsmall(
+                num_i = 6,
+                num_h = 100,
+                vocab_len=len(self.train_dataset.tokenizer),
+            )
+        elif hparams.model == "lstm":
+            self.transformer = LSTM(
+                input_dim=6,
+                embedding_dim=128,
+                hidden_dim=256,
+                layer_dim=2,
+                vocab_len=len(self.train_dataset.tokenizer),
+            )
+        else:
+            raise RuntimeError("Model not supported")
 
         self.margin = torch.Tensor([0])
         self.next_epoch_to_eval = -1
@@ -152,7 +184,10 @@ class TrainableTransformer(LightningModule):
 
         :returns: an iterator for self.train_dataset
         """
-        device = self.transformer.embedding.weight.device
+        if "linear2" in self.transformer._modules:
+            device = self.transformer.linear2.weight.device
+        else:
+            device = self.transformer.embedding.weight.device
         iterator = ArithmeticIterator(
             self.train_dataset,
             device,
@@ -169,7 +204,10 @@ class TrainableTransformer(LightningModule):
 
         :returns: an iterator for self.train_dataset
         """
-        device = self.transformer.embedding.weight.device
+        if "linear2" in self.transformer._modules:
+            device = self.transformer.linear2.weight.device
+        else:
+            device = self.transformer.embedding.weight.device
         iterator = ArithmeticIterator(
             self.val_dataset,
             device,
@@ -606,7 +644,14 @@ class TrainableTransformer(LightningModule):
                 ).detach().cpu().numpy() / np.sqrt(n_params)
 
             # train accuracy
-            device = self.transformer.embedding.weight.device
+            if self.model == "transformer":
+                device = self.transformer.embedding.weight.device
+            elif "mlp" in self.model:
+                device = self.transformer.linear2.weight.device
+            elif self.model == "lstm":
+                device = self.transformer.embedding.weight.device
+            else:
+                raise RuntimeError("Model not supported!!")
             train_data = self.train_dataset.data.to(device)
             training_data = {"text": train_data[:, :-1], "target": train_data[:, 1:]}
             with torch.no_grad():
@@ -865,6 +910,8 @@ def add_args(parser=None) -> Namespace:
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--max_epochs", type=int, default=None)
     parser.add_argument("--max_steps", type=int, default=100000)
+    parser.add_argument("--model", type=str, default="transformer")
+    parser.add_argument("--prefix", type=str, default="default")
     parser.add_argument("--optimizer", type=str, default='adamw')
     parser.add_argument("--K", type=int, default=2)
     # parser.add_argument("--checkpoint_period", type=int, default=1)

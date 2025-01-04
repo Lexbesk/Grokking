@@ -13,6 +13,139 @@ import pytorch_lightning as pl
 
 from argparse import ArgumentParser
 
+class LSTM(nn.Module):
+    def __init__(self, input_dim, embedding_dim, hidden_dim, layer_dim, vocab_len):
+        super(LSTM, self).__init__()
+        self.hidden_dim = hidden_dim
+        output_dim = vocab_len * 6
+        self.layer_dim = layer_dim
+        self.embedding = nn.Embedding(input_dim, embedding_dim)
+        self.linear_init = nn.Linear(1, embedding_dim)
+        self.lstm = nn.LSTM(input_size=embedding_dim, hidden_size=hidden_dim, num_layers=layer_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, output_dim)
+        self.vocab_len = vocab_len
+
+    def forward(self, x, h0=None, c0=None, save_activations: bool = False,):
+        # If hidden and cell states are not provided, initialize them as zeros
+        # Forward pass through LSTM
+        x = x.reshape(x.size(0), x.size(1), 1)
+        x = x.float()
+        x = self.linear_init(x)
+        out, (hn, cn) = self.lstm(x)
+        out = self.fc(out[:, -1, :])  # Selecting the last output
+        out = out.reshape(out.size(0), 6, self.vocab_len)
+        return out, None, None
+
+class MLPlarge(torch.nn.Module):
+
+    def __init__(self,num_i,num_h,vocab_len):
+        super(MLPlarge,self).__init__()
+
+        self.linear1=torch.nn.Linear(num_i,num_h)
+        self.relu=torch.nn.ReLU()
+        self.linear2=torch.nn.Linear(num_h,num_h)
+        self.relu2=torch.nn.ReLU()
+        self.linear3=torch.nn.Linear(num_h,num_h)
+        self.relu3=torch.nn.ReLU()
+        self.linear4=torch.nn.Linear(num_h,num_h)
+        self.relu4=torch.nn.ReLU()
+        self.linear5=torch.nn.Linear(num_h,num_h)
+        self.relu5=torch.nn.ReLU()
+        self.linear6=torch.nn.Linear(num_h,num_h)
+        self.relu6=torch.nn.ReLU()
+        self.linear7=torch.nn.Linear(num_h,num_h)
+        self.relu7=torch.nn.ReLU()
+        self.linear8=torch.nn.Linear(num_h,num_h)
+        self.relu8=torch.nn.ReLU()
+        self.linearo=torch.nn.Linear(num_h,vocab_len*6)
+        self.vocab_len = vocab_len
+
+    def forward(self, x, save_activations: bool = False,):
+        # Make sure sampling inputs are on the correct device
+        x = x.to(self.linear2.weight.device)
+        x = x.float()
+        x = self.linear1(x)
+        x = self.relu(x)
+        x = self.linear2(x)
+        x = self.relu2(x)
+        x = self.linear3(x)
+        x = self.relu3(x)
+        x = self.linear4(x)
+        x = self.relu4(x)
+        x = self.linear5(x)
+        x = self.relu5(x)
+        x = self.linear6(x)
+        x = self.relu6(x)
+        x = self.linear7(x)
+        x = self.relu7(x)
+        x = self.linear8(x)
+        x = self.relu8(x)
+        x = self.linearo(x)
+        nbz = x.shape[0]
+        x = x.reshape(nbz, 6, self.vocab_len)
+        return x, None, None
+
+class MLPmedium(torch.nn.Module):
+
+    def __init__(self,num_i,num_h,vocab_len):
+        super(MLPmedium,self).__init__()
+
+        self.linear1=torch.nn.Linear(num_i,num_h)
+        self.relu=torch.nn.ReLU()
+        self.linear2=torch.nn.Linear(num_h,num_h)
+        self.relu2=torch.nn.ReLU()
+        self.linear3=torch.nn.Linear(num_h,num_h)
+        self.relu3=torch.nn.ReLU()
+        self.linear4=torch.nn.Linear(num_h,num_h)
+        self.relu4=torch.nn.ReLU()
+        self.linear5=torch.nn.Linear(num_h,num_h)
+        self.relu5=torch.nn.ReLU()
+        self.linearo=torch.nn.Linear(num_h,vocab_len*6)
+        self.vocab_len = vocab_len
+
+    def forward(self, x, save_activations: bool = False,):
+        # Make sure sampling inputs are on the correct device
+        x = x.to(self.linear2.weight.device)
+        x = x.float()
+        x = self.linear1(x)
+        x = self.relu(x)
+        x = self.linear2(x)
+        x = self.relu2(x)
+        x = self.linear3(x)
+        x = self.relu3(x)
+        x = self.linear4(x)
+        x = self.relu4(x)
+        x = self.linear5(x)
+        x = self.relu5(x)
+        x = self.linearo(x)
+        nbz = x.shape[0]
+        x = x.reshape(nbz, 6, self.vocab_len)
+        return x, None, None
+
+class MLPsmall(torch.nn.Module):
+
+    def __init__(self,num_i,num_h,vocab_len):
+        super(MLPsmall,self).__init__()
+
+        self.linear1=torch.nn.Linear(num_i,num_h)
+        self.relu=torch.nn.ReLU()
+        self.linear2=torch.nn.Linear(num_h,num_h)
+        self.relu2=torch.nn.ReLU()
+        self.linearo=torch.nn.Linear(num_h,vocab_len*6)
+        self.vocab_len = vocab_len
+
+    def forward(self, x, save_activations: bool = False,):
+        # Make sure sampling inputs are on the correct device
+        x = x.to(self.linear2.weight.device)
+        x = x.float()
+        x = self.linear1(x)
+        x = self.relu(x)
+        x = self.linear2(x)
+        x = self.relu2(x)
+        x = self.linearo(x)
+        nbz = x.shape[0]
+        x = x.reshape(nbz, 6, self.vocab_len)
+        return x, None, None
 
 class Linear(nn.Linear):
     def __init__(self, *args, **kwargs):
