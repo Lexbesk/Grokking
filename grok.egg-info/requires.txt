@@ -1,0 +1,8 @@
+pytorch_lightning==1.5
+blobfile
+numpy
+torch
+tqdm
+scipy
+mod
+matplotlib

@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: grok
+Version: 0.0.1
+License-File: LICENSE
+Requires-Dist: pytorch_lightning==1.5
+Requires-Dist: blobfile
+Requires-Dist: numpy
+Requires-Dist: torch
+Requires-Dist: tqdm
+Requires-Dist: scipy
+Requires-Dist: mod
+Requires-Dist: matplotlib
