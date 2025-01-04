@@ -17,6 +17,16 @@ The python file train.py is for training and the grokking phenomenon.
 ./scripts/train.py
 ```
 
+## Training with different model architecture
+
+```bash
+python scripts/train.py --train_data_pct 20 --model transformer
+python scripts/train.py --train_data_pct 50 --model mlplarge
+python scripts/train.py --train_data_pct 70 --model mlpmedium
+python scripts/train.py --train_data_pct 80 --model mlpsmall
+python scripts/train.py --train_data_pct 80 --model lstm
+```
+
 ## Training with different settings
 
 ```bash
